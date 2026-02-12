@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>圖片挑戰遊戲</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; background: #f9f9f9; }
+  #grid { display: grid; grid-template-columns: repeat(4, 200px); grid-gap: 10px; justify-content: center; margin-top: 20px; }
+  .cell { position: relative; }
+  .highlight { border: 5px solid red; }
+  button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+</style>
+</head>
+<body>
+<h1>圖片挑戰遊戲</h1>
+<p>先選擇 3~6 張圖片，再按「開始遊戲」。</p>
+<input type="file" id="fileInput" multiple accept="image/*">
+<br>
+<button id="startBtn">開始遊戲</button>
+<button id="nextBtn" style="display:none;">挑戰下一回合</button>
+<div id="grid"></div>
+
+<script>
+let images = [];
+let round = 1;
+let interval = 500; // 毫秒
+let timer;
+
+document.getElementById("fileInput").addEventListener("change", e => {
+  images = Array.from(e.target.files);
+});
+
+function playRound() {
+  let numImages = Math.min(2 + (round - 1), images.length);
+  let chosen = images.slice(0, numImages);
+  let grid = [];
+  for (let i=0; i<8; i++) {
+    grid.push(chosen[Math.floor(Math.random()*chosen.length)]);
+  }
+
+  let gridDiv = document.getElementById("grid");
+  gridDiv.innerHTML = "";
+  grid.forEach(file => {
+    let cell = document.createElement("div");
+    cell.className = "cell";
+    let img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    img.width = 200; img.height = 200;
+    cell.appendChild(img);
+    gridDiv.appendChild(cell);
+  });
+
+  let cells = document.querySelectorAll(".cell");
+  let index = 0;
+  timer = setInterval(() => {
+    cells.forEach(c => c.classList.remove("highlight"));
+    cells[index].classList.add("highlight");
+    index++;
+    if (index >= cells.length) {
+      clearInterval(timer);
+      document.getElementById("nextBtn").style.display = "inline";
+    }
+  }, interval);
+}
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  round = 1;
+  document.getElementById("nextBtn").style.display = "none";
+  playRound();
+});
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+  round++;
+  document.getElementById("nextBtn").style.display = "none";
+  playRound();
+});
+</script>
+</body>
+</html>
