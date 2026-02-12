@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>圖片挑戰遊戲</title>
+<title>2026鉅倡年終<BR>Say the word on beat<BR>大挑戰</title>
 <style>
   body { font-family: Arial, sans-serif; text-align: center; background: #f9f9f9; }
   #controls { margin: 20px; }
@@ -31,6 +31,10 @@
 <div id="status"></div>
 <div id="dropZone">拖放圖片到這裡</div>
 <div id="grid"></div>
+
+<!-- 音樂與音效 -->
+<audio id="bgMusic" src="Say_the_word_on_beat.mp3"></audio>
+<audio id="effect" src="bi.wav"></audio>
 
 <script>
 let images = [];
@@ -92,29 +96,38 @@ function playRound() {
   let interval = parseInterval(round);
   updateStatus(interval/1000);
 
-  // 先逐一顯示圖片
+  // 初始先隱藏所有圖片
+  cells.forEach(c => c.style.visibility = "hidden");
+
+  // 播放氛圍音樂
+  let bgMusic = document.getElementById("bgMusic");
+  bgMusic.currentTime = 0;
+  bgMusic.play();
+
+  // 每張圖片顯示時間 = 音樂長度 / 8
+  let showInterval = (2.24 / 8) * 1000; // 約 280ms
   let index = 0;
   let showTimer = setInterval(() => {
     cells[index].style.visibility = "visible";
     index++;
     if (index >= cells.length) {
       clearInterval(showTimer);
-      // 開始紅圈提示
-      let highlightIndex = 0;
-      timer = setInterval(() => {
-        cells.forEach(c => c.classList.remove("highlight"));
-        cells[highlightIndex].classList.add("highlight");
-        highlightIndex++;
-        if (highlightIndex >= cells.length) {
-          clearInterval(timer);
-          document.getElementById("nextBtn").style.display = "inline";
-        }
-      }, interval);
+      // 等音樂播完再開始紅圈提示
+      bgMusic.onended = () => {
+        let highlightIndex = 0;
+        timer = setInterval(() => {
+          cells.forEach(c => c.classList.remove("highlight"));
+          cells[highlightIndex].classList.add("highlight");
+          document.getElementById("effect").play(); // 播放音效
+          highlightIndex++;
+          if (highlightIndex >= cells.length) {
+            clearInterval(timer);
+            document.getElementById("nextBtn").style.display = "inline";
+          }
+        }, interval);
+      };
     }
-  }, interval);
-
-  // 初始先隱藏所有圖片
-  cells.forEach(c => c.style.visibility = "hidden");
+  }, showInterval);
 }
 
 document.getElementById("startBtn").addEventListener("click", () => {
