@@ -79,11 +79,10 @@ function updateStatus(intervalSec) {
 }
 
 function playRound() {
-  let numImages = Math.min(2 + (round - 1), images.length);
-  let chosen = images.slice(0, numImages);
+  // 隨機選出 8 張圖片（從全部圖片中）
   let grid = [];
   for (let i=0; i<8; i++) {
-    grid.push(chosen[Math.floor(Math.random()*chosen.length)]);
+    grid.push(images[Math.floor(Math.random()*images.length)]);
   }
 
   let gridDiv = document.getElementById("grid");
@@ -106,6 +105,7 @@ function playRound() {
 
   // 播放氛圍音樂
   let bgMusic = document.getElementById("bgMusic");
+  bgMusic.pause();
   bgMusic.currentTime = 0;
   bgMusic.play().catch(err => console.log("需要使用者互動才能播放音樂:", err));
 
