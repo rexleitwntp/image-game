@@ -109,32 +109,32 @@ function playRound() {
   bgMusic.currentTime = 0;
   bgMusic.play().catch(err => console.log("需要使用者互動才能播放音樂:", err));
 
-  // 每張圖片顯示時間 = 音樂長度 / 8
-  let showInterval = (2.24 / 8) * 1000; // 約 280ms
+  // 每張圖片顯示時間 = MP3總長度 / 8
+  let showInterval = 2800 / 8; // ≈ 350ms
   let index = 0;
   let showTimer = setInterval(() => {
     cells[index].style.visibility = "visible";
     index++;
-    if (index >= cells.length) {
-      clearInterval(showTimer);
+    if (index >= cells.length) clearInterval(showTimer);
+  }, showInterval);
 
-      // 用 setTimeout 保證音樂播完後開始紅圈
-      setTimeout(() => {
-        let highlightIndex = 0;
-        timer = setInterval(() => {
-          cells.forEach(c => c.classList.remove("highlight"));
-          cells[highlightIndex].classList.add("highlight");
-          let effect = document.getElementById("effect");
-          effect.currentTime = 0;
-          effect.play();
-          highlightIndex++;
-          if (highlightIndex >= cells.length) {
-            clearInterval(timer);
-            document.getElementById("nextBtn").style.display = "inline";
-          }
-        }, interval);
-      }, 2240); // 音樂長度 2.24 秒
-    }
+  // 音樂播完後開始紅圈提示
+  setTimeout(() => {
+    let highlightIndex = 0;
+    timer = setInterval(() => {
+      cells.forEach(c => c.classList.remove("highlight"));
+      cells[highlightIndex].classList.add("highlight");
+      let effect = document.getElementById("effect");
+      effect.currentTime = 0;
+      effect.play();
+      highlightIndex++;
+      if (highlightIndex >= cells.length) {
+        clearInterval(timer);
+        document.getElementById("nextBtn").style.display = "inline";
+      }
+    }, interval);
+  }, 2800); // MP3長度 2.8 秒
+}
   }, showInterval);
 }
 
