@@ -78,12 +78,60 @@ function updateStatus(intervalSec) {
     `第 ${round} 回合 / 共 ${totalRounds} 回合　速度: ${intervalSec.toFixed(2)} 秒`;
 }
 
-function playRound() {
-  // 隨機選出 8 張圖片（從全部圖片中）
+// 隨機排列邏輯
+function generateGrid(images) {
   let grid = [];
-  for (let i=0; i<8; i++) {
-    grid.push(images[Math.floor(Math.random()*images.length)]);
+
+  if (images.length <= 8) {
+    grid = [...images];
+    while (grid.length < 8) {
+      grid.push(images[Math.floor(Math.random() * images.length)]);
+    }
+    shuffle(grid);
+  } else {
+    for (let i = 0; i < 8; i++) {
+      let candidate;
+      do {
+        candidate = images[Math.floor(Math.random() * images.length)];
+      } while (
+        (i >= 2 && grid[i-1] === candidate && grid[i-2] === candidate) // 避免三連
+      );
+      grid.push(candidate);
+    }
   }
+
+  // 檢查「連續兩張相同」的分布
+  let consecutiveCount = 0;
+  for (let i = 1; i < grid.length; i++) {
+    if (grid[i] === grid[i-1]) consecutiveCount++;
+  }
+
+  if (consecutiveCount === 0) {
+    // 沒有任何連續 → 強制插入一組
+    let pos = Math.floor(Math.random() * (grid.length - 1));
+    grid[pos+1] = grid[pos];
+  } else if (consecutiveCount === grid.length - 1) {
+    // 全部都是連續 → 打散
+    shuffle(grid);
+  }
+
+  return grid;
+}
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function playRound() {
+  if (images.length === 0) {
+    alert("請先拖放至少 1 張圖片才能開始遊戲！");
+    return;
+  }
+
+  let grid = generateGrid(images);
 
   let gridDiv = document.getElementById("grid");
   gridDiv.innerHTML = "";
