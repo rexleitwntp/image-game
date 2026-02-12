@@ -5,30 +5,62 @@
 <title>圖片挑戰遊戲</title>
 <style>
   body { font-family: Arial, sans-serif; text-align: center; background: #f9f9f9; }
-  #grid { display: grid; grid-template-columns: repeat(4, 200px); grid-gap: 10px; justify-content: center; margin-top: 20px; }
+  #controls { margin: 20px; }
+  #grid { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    grid-gap: 20px; 
+    width: 80%; 
+    margin: auto; 
+  }
   .cell { position: relative; }
-  .highlight { border: 5px solid red; }
-  button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+  .cell img { width: 100%; height: auto; display: block; }
+  .highlight { border: 5px solid red; box-sizing: border-box; }
+  #dropZone { border: 2px dashed #aaa; padding: 20px; margin: 20px auto; width: 80%; background: #fff; }
 </style>
 </head>
 <body>
 <h1>圖片挑戰遊戲</h1>
-<p>先選擇 3~6 張圖片，再按「開始遊戲」。</p>
-<input type="file" id="fileInput" multiple accept="image/*">
-<br>
-<button id="startBtn">開始遊戲</button>
-<button id="nextBtn" style="display:none;">挑戰下一回合</button>
+<div id="controls">
+  <label>回合數: <input type="number" id="roundInput" value="4" min="1"></label>
+  <label>時間設定(秒): <input type="text" id="timeInput" value="0.5"></label>
+  <button id="startBtn">開始遊戲</button>
+  <button id="nextBtn" style="display:none;">挑戰下一回合</button>
+</div>
+<div id="dropZone">拖放圖片到這裡</div>
 <div id="grid"></div>
 
 <script>
 let images = [];
 let round = 1;
-let interval = 500; // 毫秒
+let totalRounds = 4;
 let timer;
 
-document.getElementById("fileInput").addEventListener("change", e => {
-  images = Array.from(e.target.files);
+const dropZone = document.getElementById("dropZone");
+dropZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  dropZone.style.background = "#eef";
 });
+dropZone.addEventListener("dragleave", e => {
+  dropZone.style.background = "#fff";
+});
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  images = images.concat(Array.from(e.dataTransfer.files));
+  dropZone.style.background = "#fff";
+});
+
+function parseInterval(roundNum) {
+  let input = document.getElementById("timeInput").value.trim();
+  if (input.includes("-")) {
+    let [start, end] = input.split("-").map(Number);
+    let step = (start - end) / (totalRounds - 1);
+    let current = start - step * (roundNum - 1);
+    return Math.max(current, end) * 1000;
+  } else {
+    return Number(input) * 1000;
+  }
+}
 
 function playRound() {
   let numImages = Math.min(2 + (round - 1), images.length);
@@ -45,13 +77,13 @@ function playRound() {
     cell.className = "cell";
     let img = document.createElement("img");
     img.src = URL.createObjectURL(file);
-    img.width = 200; img.height = 200;
     cell.appendChild(img);
     gridDiv.appendChild(cell);
   });
 
   let cells = document.querySelectorAll(".cell");
   let index = 0;
+  let interval = parseInterval(round);
   timer = setInterval(() => {
     cells.forEach(c => c.classList.remove("highlight"));
     cells[index].classList.add("highlight");
@@ -65,6 +97,7 @@ function playRound() {
 
 document.getElementById("startBtn").addEventListener("click", () => {
   round = 1;
+  totalRounds = Number(document.getElementById("roundInput").value);
   document.getElementById("nextBtn").style.display = "none";
   playRound();
 });
@@ -72,7 +105,11 @@ document.getElementById("startBtn").addEventListener("click", () => {
 document.getElementById("nextBtn").addEventListener("click", () => {
   round++;
   document.getElementById("nextBtn").style.display = "none";
-  playRound();
+  if (round <= totalRounds) {
+    playRound();
+  } else {
+    alert("遊戲結束！");
+  }
 });
 </script>
 </body>
