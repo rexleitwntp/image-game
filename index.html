@@ -6,6 +6,7 @@
 <style>
   body { font-family: Arial, sans-serif; text-align: center; background: #f9f9f9; }
   #controls { margin: 20px; }
+  #status { margin: 10px; font-size: 18px; font-weight: bold; }
   #grid { 
     display: grid; 
     grid-template-columns: repeat(4, 1fr); 
@@ -27,6 +28,7 @@
   <button id="startBtn">開始遊戲</button>
   <button id="nextBtn" style="display:none;">挑戰下一回合</button>
 </div>
+<div id="status"></div>
 <div id="dropZone">拖放圖片到這裡</div>
 <div id="grid"></div>
 
@@ -62,6 +64,11 @@ function parseInterval(roundNum) {
   }
 }
 
+function updateStatus(intervalSec) {
+  document.getElementById("status").textContent = 
+    `第 ${round} 回合 / 共 ${totalRounds} 回合　速度: ${intervalSec.toFixed(2)} 秒`;
+}
+
 function playRound() {
   let numImages = Math.min(2 + (round - 1), images.length);
   let chosen = images.slice(0, numImages);
@@ -82,17 +89,32 @@ function playRound() {
   });
 
   let cells = document.querySelectorAll(".cell");
-  let index = 0;
   let interval = parseInterval(round);
-  timer = setInterval(() => {
-    cells.forEach(c => c.classList.remove("highlight"));
-    cells[index].classList.add("highlight");
+  updateStatus(interval/1000);
+
+  // 先逐一顯示圖片
+  let index = 0;
+  let showTimer = setInterval(() => {
+    cells[index].style.visibility = "visible";
     index++;
     if (index >= cells.length) {
-      clearInterval(timer);
-      document.getElementById("nextBtn").style.display = "inline";
+      clearInterval(showTimer);
+      // 開始紅圈提示
+      let highlightIndex = 0;
+      timer = setInterval(() => {
+        cells.forEach(c => c.classList.remove("highlight"));
+        cells[highlightIndex].classList.add("highlight");
+        highlightIndex++;
+        if (highlightIndex >= cells.length) {
+          clearInterval(timer);
+          document.getElementById("nextBtn").style.display = "inline";
+        }
+      }, interval);
     }
   }, interval);
+
+  // 初始先隱藏所有圖片
+  cells.forEach(c => c.style.visibility = "hidden");
 }
 
 document.getElementById("startBtn").addEventListener("click", () => {
