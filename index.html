@@ -2,11 +2,16 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>Say the word on beat</title>
+<title>圖片挑戰遊戲</title>
 <style>
-  body { font-family: Arial, sans-serif; text-align: center; background: #f9f9f9; }
+  body { 
+    font-family: Arial, sans-serif; 
+    text-align: center; 
+    background: url('assets/background.jpg') no-repeat center center fixed; 
+    background-size: cover; 
+  }
   #controls { margin: 20px; }
-  #status { margin: 10px; font-size: 18px; font-weight: bold; }
+  #status { margin: 10px; font-size: 18px; font-weight: bold; color: #fff; }
   #grid { 
     display: grid; 
     grid-template-columns: repeat(4, 1fr); 
@@ -17,14 +22,14 @@
   .cell { position: relative; }
   .cell img { width: 100%; height: auto; display: block; }
   .highlight { border: 5px solid red; box-sizing: border-box; }
-  #dropZone { border: 2px dashed #aaa; padding: 20px; margin: 20px auto; width: 80%; background: #fff; }
+  #dropZone { border: 2px dashed #aaa; padding: 20px; margin: 20px auto; width: 80%; background: rgba(255,255,255,0.8); }
 </style>
 </head>
 <body>
-<h1>2026鉅倡年終<BR>Say the word on beat<BR>大挑戰</h1>
+<h1 style="color:white;">2026鉅倡年終<BR>Say the word on beat<BR>大挑戰</h1>
 <div id="controls">
-  <label>回合數: <input type="number" id="roundInput" value="4" min="1"></label>
-  <label>時間設定(秒): <input type="text" id="timeInput" value="0.5"></label>
+  <label style="color:white;">回合數: <input type="number" id="roundInput" value="4" min="1"></label>
+  <label style="color:white;">時間設定(秒): <input type="text" id="timeInput" value="0.5"></label>
   <button id="startBtn">開始遊戲</button>
   <button id="nextBtn" style="display:none;">挑戰下一回合</button>
 </div>
@@ -33,8 +38,8 @@
 <div id="grid"></div>
 
 <!-- 音樂與音效 -->
-<audio id="bgMusic" src="Say_the_word_on_beat.MP3"></audio>
-<audio id="effect" src="bi.WAV"></audio>
+<audio id="bgMusic" src="assets/Say_the_word_on_beat.MP3"></audio>
+<audio id="effect" src="assets/bi.WAV"></audio>
 
 <script>
 let images = [];
@@ -48,12 +53,12 @@ dropZone.addEventListener("dragover", e => {
   dropZone.style.background = "#eef";
 });
 dropZone.addEventListener("dragleave", e => {
-  dropZone.style.background = "#fff";
+  dropZone.style.background = "rgba(255,255,255,0.8)";
 });
 dropZone.addEventListener("drop", e => {
   e.preventDefault();
   images = images.concat(Array.from(e.dataTransfer.files));
-  dropZone.style.background = "#fff";
+  dropZone.style.background = "rgba(255,255,255,0.8)";
 });
 
 function parseInterval(roundNum) {
@@ -102,7 +107,7 @@ function playRound() {
   // 播放氛圍音樂
   let bgMusic = document.getElementById("bgMusic");
   bgMusic.currentTime = 0;
-  bgMusic.play();
+  bgMusic.play().catch(err => console.log("需要使用者互動才能播放音樂:", err));
 
   // 每張圖片顯示時間 = 音樂長度 / 8
   let showInterval = (2.24 / 8) * 1000; // 約 280ms
@@ -112,20 +117,23 @@ function playRound() {
     index++;
     if (index >= cells.length) {
       clearInterval(showTimer);
-      // 等音樂播完再開始紅圈提示
-      bgMusic.onended = () => {
+
+      // 用 setTimeout 保證音樂播完後開始紅圈
+      setTimeout(() => {
         let highlightIndex = 0;
         timer = setInterval(() => {
           cells.forEach(c => c.classList.remove("highlight"));
           cells[highlightIndex].classList.add("highlight");
-          document.getElementById("effect").play(); // 播放音效
+          let effect = document.getElementById("effect");
+          effect.currentTime = 0;
+          effect.play();
           highlightIndex++;
           if (highlightIndex >= cells.length) {
             clearInterval(timer);
             document.getElementById("nextBtn").style.display = "inline";
           }
         }, interval);
-      };
+      }, 2240); // 音樂長度 2.24 秒
     }
   }, showInterval);
 }
