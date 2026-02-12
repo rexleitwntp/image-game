@@ -37,15 +37,19 @@
 <div id="dropZone">拖放圖片到這裡</div>
 <div id="grid"></div>
 
-<!-- 音樂與音效 -->
-<audio id="bgMusic" src="assets/Say_the_word_on_beat.MP3"></audio>
-<audio id="effect" src="assets/bi.WAV"></audio>
+<!-- 音樂與音效（修正格式与MIME） -->
+<audio id="bgMusic" src="assets/Say_the_word_on_beat.mp3" type="audio/mpeg">
+<audio id="effect" src="assets/bi.wav" type="audio/wav">
 
 <script>
 let images = [];
 let round = 1;
 let totalRounds = 4;
 let timer;
+
+// 预加载音频元素
+const bgMusic = document.getElementById("bgMusic");
+const effectSound = document.getElementById("effect");
 
 const dropZone = document.getElementById("dropZone");
 dropZone.addEventListener("dragover", e => {
@@ -104,11 +108,6 @@ function playRound() {
   // 初始先隱藏所有圖片
   cells.forEach(c => c.style.visibility = "hidden");
 
-  // 播放氛圍音樂
-  let bgMusic = document.getElementById("bgMusic");
-  bgMusic.currentTime = 0;
-  bgMusic.play().catch(err => console.log("需要使用者互動才能播放音樂:", err));
-
   // 每張圖片顯示時間 = MP3總長度 / 8
   let showInterval = 2800 / 8; // ≈ 350ms
   let index = 0;
@@ -124,9 +123,9 @@ function playRound() {
     timer = setInterval(() => {
       cells.forEach(c => c.classList.remove("highlight"));
       cells[highlightIndex].classList.add("highlight");
-      let effect = document.getElementById("effect");
-      effect.currentTime = 0;
-      effect.play();
+      // 播放音效（已在用户交互上下文）
+      effectSound.currentTime = 0;
+      effectSound.play().catch(err => console.log("音效播放失败:", err));
       highlightIndex++;
       if (highlightIndex >= cells.length) {
         clearInterval(timer);
@@ -136,10 +135,22 @@ function playRound() {
   }, 2800); // MP3長度 2.8 秒
 }
 
-document.getElementById("startBtn").addEventListener("click", () => {
+// ✅ 核心修复：在用户点击时处理背景音乐播放
+document.getElementById("startBtn").addEventListener("click", async () => {
   round = 1;
   totalRounds = Number(document.getElementById("roundInput").value);
   document.getElementById("nextBtn").style.display = "none";
+
+  // 先静音播放背景音乐，绕过自动播放策略
+  try {
+    bgMusic.muted = true;
+    await bgMusic.play();
+    bgMusic.muted = false;
+    bgMusic.currentTime = 0; // 重置到开头
+  } catch (err) {
+    console.log("背景音乐自动播放被拦截，需用户交互:", err);
+  }
+
   playRound();
 });
 
